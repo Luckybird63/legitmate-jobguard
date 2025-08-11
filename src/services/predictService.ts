@@ -10,6 +10,12 @@ export type PredictionResult = {
   result: "Legit" | "Fake";
   confidence: number; // 0..1
   keywords: string[];
+  // Optional scraped or provided details
+  title?: string;
+  company?: string;
+  location?: string;
+  department?: string;
+  description?: string;
 };
 
 const STORAGE_KEY = "legitmate_api_base";
@@ -64,6 +70,31 @@ export const predict = async (job: JobInput): Promise<PredictionResult> => {
     return await res.json();
   } catch (e) {
     return mockPredict(job);
+  }
+};
+
+export const predictFromLink = async (url: string): Promise<PredictionResult> => {
+  const base = getApiBase();
+  if (!base) {
+    await new Promise((r) => setTimeout(r, 500));
+    let host = "";
+    try { host = new URL(url).hostname.replace(/^www\./, ""); } catch {}
+    const mock = computeRisk(url);
+    return { ...mock, title: `Job from ${host || "link"}`, description: url };
+  }
+  try {
+    const res = await fetch(`${base.replace(/\/$/, "")}/predict-link`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    let host = "";
+    try { host = new URL(url).hostname.replace(/^www\./, ""); } catch {}
+    const fallback = computeRisk(url);
+    return { ...fallback, title: `Job from ${host || "link"}`, description: url };
   }
 };
 

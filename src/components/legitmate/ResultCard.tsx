@@ -18,6 +18,39 @@ const ResultCard = ({ result }: { result: PredictionResult | null }) => {
           </Badge>
         </CardHeader>
         <CardContent className="grid gap-4">
+          {/* Details if available */}
+          {(result.title || result.company || result.location || result.description) ? (
+            <div className="grid gap-2">
+              <span className="text-sm text-muted-foreground">Details</span>
+              <div className="grid md:grid-cols-3 gap-3">
+                {result.title && (
+                  <div>
+                    <span className="text-xs text-muted-foreground">Title</span>
+                    <div className="font-medium">{result.title}</div>
+                  </div>
+                )}
+                {result.company && (
+                  <div>
+                    <span className="text-xs text-muted-foreground">Company</span>
+                    <div className="font-medium">{result.company}</div>
+                  </div>
+                )}
+                {result.location && (
+                  <div>
+                    <span className="text-xs text-muted-foreground">Location</span>
+                    <div className="font-medium">{result.location}</div>
+                  </div>
+                )}
+              </div>
+              {result.description && (
+                <div className="rounded-md border bg-card text-card-foreground p-3">
+                  <div className="text-xs text-muted-foreground mb-1">Description</div>
+                  <p className="text-sm leading-relaxed max-h-40 overflow-auto">{result.description}</p>
+                </div>
+              )}
+            </div>
+          ) : null}
+
           <div className="grid gap-2">
             <span className="text-sm text-muted-foreground">Confidence</span>
             <Progress value={Math.round(result.confidence * 100)} />
