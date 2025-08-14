@@ -1,1 +1,7 @@
 project_id = "cilgwgzengkdgerdztdx"
+
+[functions.predict]
+verify_jwt = false
+
+[functions.predict-link]
+verify_jwt = false

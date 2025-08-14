@@ -16,6 +16,9 @@ export type PredictionResult = {
   location?: string;
   department?: string;
   description?: string;
+  riskFactors?: string[];
+  trustworthyIndicators?: string[];
+  analysisComment?: string;
 };
 
 const STORAGE_KEY = "legitmate_api_base";
@@ -59,43 +62,109 @@ export const mockPredict = async (job: JobInput): Promise<PredictionResult> => {
 
 export const predict = async (job: JobInput): Promise<PredictionResult> => {
   const base = getApiBase();
-  if (!base) return mockPredict(job);
-  try {
-    const res = await fetch(`${base.replace(/\/$/, "")}/predict`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(job),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch (e) {
-    return mockPredict(job);
+  
+  if (base) {
+    try {
+      const res = await fetch(`${base.replace(/\/$/, "")}/predict`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(job),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.error('Custom API failed:', e);
+    }
   }
+  
+  // Use built-in Supabase edge function
+  try {
+    const res = await fetch(`https://cilgwgzengkdgerdztdx.supabase.co/functions/v1/predict`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpbGd3Z3plbmdrZGdlcmR6dGR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNjI5NjgsImV4cCI6MjA3MDczODk2OH0.EA-ZvV2NLo3Whnge3dI1wDzmmB1qNVvEZOXldRChx1w`
+      },
+      body: JSON.stringify({ job }),
+    });
+    if (res.ok) {
+      const result = await res.json();
+      // Convert to match our interface
+      return {
+        result: result.result === 'legit' ? 'Legit' : 'Fake',
+        confidence: result.confidence / 100, // Convert percentage to 0-1
+        keywords: result.keywords || [],
+        title: result.title,
+        company: result.company,
+        location: result.location,
+        description: result.description,
+        riskFactors: result.riskFactors,
+        trustworthyIndicators: result.trustworthyIndicators,
+        analysisComment: result.analysisComment
+      };
+    }
+  } catch (e) {
+    console.error('Built-in service failed:', e);
+  }
+  
+  return mockPredict(job);
 };
 
 export const predictFromLink = async (url: string): Promise<PredictionResult> => {
   const base = getApiBase();
-  if (!base) {
-    await new Promise((r) => setTimeout(r, 500));
-    let host = "";
-    try { host = new URL(url).hostname.replace(/^www\./, ""); } catch {}
-    const mock = computeRisk(url);
-    return { ...mock, title: `Job from ${host || "link"}`, description: url };
+  
+  if (base) {
+    try {
+      const res = await fetch(`${base.replace(/\/$/, "")}/predict-link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.error('Custom API failed:', e);
+    }
   }
+  
+  // Use built-in Supabase edge function
   try {
-    const res = await fetch(`${base.replace(/\/$/, "")}/predict-link`, {
+    const res = await fetch(`https://cilgwgzengkdgerdztdx.supabase.co/functions/v1/predict-link`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpbGd3Z3plbmdrZGdlcmR6dGR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNjI5NjgsImV4cCI6MjA3MDczODk2OH0.EA-ZvV2NLo3Whnge3dI1wDzmmB1qNVvEZOXldRChx1w`
+      },
       body: JSON.stringify({ url }),
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    if (res.ok) {
+      const result = await res.json();
+      // Convert to match our interface
+      return {
+        result: result.result === 'legit' ? 'Legit' : 'Fake',
+        confidence: result.confidence / 100, // Convert percentage to 0-1
+        keywords: result.keywords || [],
+        title: result.title,
+        company: result.company,
+        location: result.location,
+        description: result.description,
+        riskFactors: result.riskFactors,
+        trustworthyIndicators: result.trustworthyIndicators,
+        analysisComment: result.analysisComment
+      };
+    }
   } catch (e) {
-    let host = "";
-    try { host = new URL(url).hostname.replace(/^www\./, ""); } catch {}
-    const fallback = computeRisk(url);
-    return { ...fallback, title: `Job from ${host || "link"}`, description: url };
+    console.error('Built-in service failed:', e);
   }
+  
+  // Fallback to mock
+  await new Promise((r) => setTimeout(r, 500));
+  let host = "";
+  try { host = new URL(url).hostname.replace(/^www\./, ""); } catch {}
+  const mock = computeRisk(url);
+  return { ...mock, title: `Job from ${host || "link"}`, description: url };
 };
 
 export const predictBulk = async (file: File): Promise<PredictionResult[]> => {

@@ -14,7 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      job_predictions: {
+        Row: {
+          analysis_comment: string | null
+          company: string | null
+          confidence_score: number
+          created_at: string
+          department: string | null
+          description: string | null
+          id: string
+          job_title: string
+          job_url: string | null
+          location: string | null
+          prediction_result: string
+          risk_factors: string[] | null
+          trustworthy_indicators: string[] | null
+          user_id: string | null
+        }
+        Insert: {
+          analysis_comment?: string | null
+          company?: string | null
+          confidence_score: number
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          id?: string
+          job_title: string
+          job_url?: string | null
+          location?: string | null
+          prediction_result: string
+          risk_factors?: string[] | null
+          trustworthy_indicators?: string[] | null
+          user_id?: string | null
+        }
+        Update: {
+          analysis_comment?: string | null
+          company?: string | null
+          confidence_score?: number
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          id?: string
+          job_title?: string
+          job_url?: string | null
+          location?: string | null
+          prediction_result?: string
+          risk_factors?: string[] | null
+          trustworthy_indicators?: string[] | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          api_key: string | null
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
